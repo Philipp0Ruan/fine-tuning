@@ -1,0 +1,12 @@
+{
+  "name": "retail-intent-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gateway HTTP para o classificador de atendimento",
+  "engines": { "node": ">=22.9.0" },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check http.mjs"
+  }
+}

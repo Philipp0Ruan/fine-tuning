@@ -1,0 +1,49 @@
+services:
+  classifier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MODEL_DIR: /model
+      DEVICE: cpu
+      PYTHON_HOST: 0.0.0.0
+      PYTHON_PORT: "8000"
+      CONFIDENCE_THRESHOLD: ${CONFIDENCE_THRESHOLD:-0.75}
+      ALLOW_SMOKE_MODEL: ${ALLOW_SMOKE_MODEL:-false}
+    volumes:
+      - type: bind
+        source: ${MODEL_DIR:-./artifacts/model}
+        target: /model
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    init: true
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      UPSTREAM_URL: http://classifier:8000
+      GATEWAY_HOST: 0.0.0.0
+      GATEWAY_PORT: "3000"
+      REQUEST_TIMEOUT_MS: ${REQUEST_TIMEOUT_MS:-30000}
+    ports: ["127.0.0.1:${GATEWAY_PORT:-3000}:3000"]
+    depends_on:
+      classifier:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    init: true
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
