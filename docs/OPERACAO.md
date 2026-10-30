@@ -65,6 +65,7 @@ O código não promove automaticamente um modelo treinado, nem faz upload dos pe
 | Modelo de ensaio bloqueado | Use BERTimbau treinado; para demonstração local habilite conscientemente `ALLOW_SMOKE_MODEL=true`. |
 | CUDA indisponível | Use CPU ou habilite GPU no Colab e confira instalação PyTorch compatível. |
 | Falta de memória | Reduza batch e comprimento de entrada; encerre outros processos com modelo carregado. |
+| No space left on device | Reserve vários GB em um disco com espaço antes de instalar pesos/dependências. A entrega local reutiliza o Torch instalado para evitar uma segunda cópia. Não apague arquivos pessoais automaticamente. |
 | Saída de treino já existe | Escolha outro `--output-dir`; não misture execuções nem apague artefatos úteis sem backup. |
 | Vazamento treino/teste | Revise a origem e faça uma divisão independente. Não remova amostras do teste silenciosamente para melhorar a nota. |
 | Dados insuficientes para estratificação | Adicione exemplos únicos de ambas as classes e ajuste a fração de validação. |

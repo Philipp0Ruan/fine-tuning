@@ -25,7 +25,7 @@ cliente -> Node.js :3000 -> FastAPI :8000 -> classificação + probabilidades
 
 ## 2. Pré-requisitos e instalação no Windows
 
-Use Python **3.11 ou 3.12**, Node.js **22.9+** e Git. Reserve espaço para dependências, cache do Hugging Face e checkpoints. O BERTimbau Base tem cerca de 110 milhões de parâmetros; a memória necessária depende do batch e do comprimento de entrada. CPU funciona, mas o treinamento completo pode ser demorado. Não é preciso login no Hugging Face para o modelo público padrão.
+Use Python **3.11 ou 3.12**, Node.js **22.9+** e Git. Reserve vários GB livres para dependências, cache do Hugging Face e checkpoints. O BERTimbau Base tem cerca de 110 milhões de parâmetros; a memória necessária depende do batch e do comprimento de entrada. CPU funciona, mas o treinamento completo pode ser demorado. Não é preciso login no Hugging Face para o modelo público padrão.
 
 Abra PowerShell e execute:
 
@@ -38,6 +38,8 @@ Copy-Item .env.example .env
 ```
 
 Se o `.env` já existir, preserve suas configurações. Os exemplos usam o Python da `.venv` diretamente, sem exigir a ativação do ambiente. Em Linux/Colab, substitua `.\.venv\Scripts\python.exe` pelo interpretador instalado. Para GPU local, instale a variante PyTorch/CUDA compatível com seu equipamento conforme o [seletor oficial do PyTorch](https://pytorch.org/get-started/locally/).
+
+Na máquina desta entrega, a `.venv` foi preparada com `--system-site-packages` para reutilizar o PyTorch existente após a instalação isolada encontrar falta de espaço. O roteiro acima cria um ambiente independente para novas instalações. Esse detalhe local não altera o isolamento das imagens Docker nem o fluxo do Colab.
 
 ## 3. Arquivos e responsabilidades
 
