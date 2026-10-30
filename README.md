@@ -49,9 +49,7 @@ src/retail_intent/
   train.py        baseline, treinamento e exportação
   predict.py      inferência com modelo salvo
   api.py          FastAPI e healthcheck
-  cli.py          comandos train, predict, validate e synthetic
-  synthetic.py    geração de mensagens artificiais para demonstração
-  smoke.py        execução completa com BERT pequeno e sem downloads
+  cli.py          comandos train, predict e validate
 gateway/          serviço HTTP em Node.js, sem dependências npm externas
 notebooks/        guia executável para Jupyter e Colab
 docs/             dados, arquitetura, operação e limitações
@@ -65,19 +63,18 @@ CHECKLIST.md      roteiro local com tópicos e subtópicos; ignorado pelo Git
 
 ## 4. Primeira execução: dados artificiais
 
-Para exercitar todo o pipeline sem baixar modelos ou dados oficiais:
+Para exercitar todo o pipeline sem baixar modelos ou dados oficiais, abra o notebook e mantenha `MODE = "smoke"`:
 
 ```powershell
-.\.venv\Scripts\python.exe -m retail_intent.smoke --output-dir artifacts/smoke
+.\.venv\Scripts\python.exe -m jupyter lab notebooks/fine_tuning.ipynb
 ```
 
-Esse comando cria mensagens artificiais, um tokenizer local e um BERT pequeno com pesos iniciais aleatórios, executa treino real com atualização de parâmetros, avalia e recarrega o artefato para inferência. O manifesto identifica `purpose=smoke`. A API rejeita esse artefato por padrão. Métricas desse modo são diagnósticas, sem significado de desempenho no desafio.
+Esse modo do notebook cria mensagens artificiais, um tokenizer local e um BERT pequeno com pesos iniciais aleatórios, executa treino real com atualização de parâmetros, avalia e recarrega o artefato para inferência. O manifesto identifica `purpose=smoke`. A API rejeita esse artefato por padrão. Métricas desse modo são diagnósticas, sem significado de desempenho no desafio.
 
-Para gerar JSONL sintéticos separadamente:
+Os JSONL artificiais ficam na pasta `data/` da execução e podem ser auditados pela CLI. Por exemplo, para o ensaio local já executado nesta entrega:
 
 ```powershell
-.\.venv\Scripts\python.exe -m retail_intent.cli synthetic --output-dir data/synthetic
-.\.venv\Scripts\python.exe -m retail_intent.cli validate --train-file data/synthetic/treino.jsonl --test-file data/synthetic/teste.jsonl
+.\.venv\Scripts\python.exe -m retail_intent.cli validate --train-file artifacts/smoke/data/treino.jsonl --test-file artifacts/smoke/data/teste.jsonl
 ```
 
 ## 5. Usar os dados do desafio
@@ -106,7 +103,7 @@ Textos vazios, JSON inválido, classes ausentes, rótulos contraditórios e sobr
 .\.venv\Scripts\python.exe -m retail_intent.cli train --train-file data/raw/treino.jsonl --test-file data/raw/teste.jsonl --output-dir artifacts/bertimbau --epochs 5 --batch-size 8 --learning-rate 0.00002 --validation-size 0.2 --max-length 128 --seed 42
 ```
 
-O programa separa a validação **somente do treino**, de modo estratificado e reprodutível, escolhe o checkpoint por **F1 macro da validação** e usa o teste reservado apenas na avaliação final. Salva também uma baseline TF-IDF + regressão logística para comparação, treinada sem observar o teste. O teste não deve ser usado para escolher hiperparâmetros; repetições orientadas por seus resultados transformam-no em validação.
+O programa separa a validação **somente do treino**, de modo estratificado e reprodutível, escolhe o checkpoint por **F1 macro da validação** e usa o teste reservado apenas na avaliação final. Registra também as métricas de uma baseline TF-IDF + regressão logística para comparação, treinada sem observar o teste. O teste não deve ser usado para escolher hiperparâmetros; repetições orientadas por seus resultados transformam-no em validação.
 
 Parâmetros úteis:
 
@@ -169,7 +166,7 @@ Contrato de `POST /classify`: objeto com somente `texts`, uma lista de 1 a 32 me
 | 502 | serviço Python indisponível ou resposta inválida |
 | 504 | prazo de resposta excedido |
 
-Para servir o artefato de demonstração, use explicitamente `MODEL_DIR=artifacts/smoke/model` e `ALLOW_SMOKE_MODEL=true`. Essa opção é apenas para ensaio local; devolva-a a `false` para uso normal.
+Para servir um artefato de demonstração, use explicitamente o caminho exibido pelo notebook em `MODEL_DIR` e `ALLOW_SMOKE_MODEL=true`. O ensaio local desta entrega fica em `artifacts/smoke/model`. Essa opção é apenas para ensaio local; devolva-a a `false` para uso normal.
 
 ## 8. Jupyter e Google Colab
 
@@ -223,7 +220,22 @@ git ls-files
 
 Versione somente os arquivos de implementação, notebook limpo, configuração de exemplo e documentação. Não use `git add -f` para incluir dados ou credenciais. Os testes simulados validam contratos, dados, treino, serialização e comunicação entre serviços; sua execução não permite concluir que o classificador funciona bem com clientes reais.
 
-## 12. Referências
+## 12. Verificações desta entrega
+
+Verificações realizadas em 30/10/2026 usando somente mensagens artificiais, sem API key e sem os JSONL oficiais do desafio:
+
+| Verificação | Resultado |
+|---|---|
+| Dados, configuração, modelo e API Python | 22 testes locais aprovados, incluindo compatibilidade com pesos `.bin` |
+| Gateway Node.js | 11 testes locais aprovados, incluindo falha de conexão, timeout e limites |
+| Treino sintético | pesos atualizados, checkpoint exportado e modelo recarregado |
+| Notebook em modo smoke | células executadas; artefato e ZIP gerados |
+| Integração HTTP local | Node.js → FastAPI → BERT sintético aprovada |
+| Docker Compose | duas imagens construídas, dois serviços saudáveis e classificação aprovada; ambiente temporário encerrado |
+
+Os testes e seus registros permanecem apenas na pasta local ignorada `.local-tests/`; não fazem parte do código versionado. O notebook demonstra o pipeline e é entregue sem saídas. A qualidade do BERTimbau com os dados do desafio ainda precisa ser medida pelo treinamento completo: nenhuma métrica do ensaio foi apresentada como resultado comercial.
+
+## 13. Referências
 
 - [BERTimbau: modelo público para português e licença do checkpoint](https://huggingface.co/neuralmind/bert-base-portuguese-cased)
 - [Hugging Face: classificação de sequências (versão usada pelo projeto)](https://huggingface.co/docs/transformers/v4.57.1/en/tasks/sequence_classification)
